@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet"
+          href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
+          integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
+          crossorigin="anonymous">
+    <style>
+        @import url("https://fonts.googleapis.com/css?family=Lato");
+        * {
+          margin: 0;
+          padding: 0;
+          -moz-box-sizing: border-box;
+          -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+        }
+
+        body {
+          padding: 20px;
+          text-align: left;
+          font-family: Lato;
+          color: #000;
+          background: #fff;
+        }
+
+        h1 {
+          font-weight: normal;
+          font-size: 40px;
+          font-weight: normal;
+          text-transform: uppercase;
+          float: left;
+          margin: 20px 0 100px 10px;
+        }
+        h1 span {
+          font-size: 13px;
+          display: block;
+          padding-left: 4px;
+        }
+
+        .tabs {
+          float: none;
+          list-style: none;
+          position: relative;
+          margin: 80px 0 0 10px;
+          text-align: left;
+        }
+        .tabs li {
+          float: none;
+          display: block;
+        }
+        .tabs input[type="radio"] {
+          position: absolute;
+          top: 0;
+          left: -9999px;
+        }
+        .tabs label {
+          display: block;
+          padding: 14px 21px;
+          border-radius: 2px 2px 0 0;
+          font-size: 20px;
+          font-weight: normal;
+          text-transform: uppercase;
+          background: #ccc;
+          cursor: pointer;
+          position: relative;
+          top: 4px;
+          -moz-transition: all 0.2s ease-in-out;
+          -o-transition: all 0.2s ease-in-out;
+          -webkit-transition: all 0.2s ease-in-out;
+          transition: all 0.2s ease-in-out;
+        }
+        .tabs label:hover {
+          color: #fff;
+          background: #666;
+        }
+        .tabs .tab-content {
+          z-index: 2;
+          display: none;
+          overflow: hidden;
+          width: 100%;
+          font-size: 17px;
+          line-height: 25px;
+          padding: 25px;
+          position: absolute;
+          top: 368px;
+          left: 0;
+          background: #fff;
+        }
+        .tabs [id^="tab"]:checked + label {
+          top: 0;
+          padding-top: 17px;
+          background: #aaa;
+        }
+        .tabs [id^="tab"]:checked ~ [id^="tab-content"] {
+          display: block;
+        }
+        @media (min-width: 1240px) {
+            .tabs li {
+                float: left;
+            }
+            .tabs .tab-content {
+                top: 53px;
+            }
+        }
+
+        p.link {
+          clear: both;
+          margin: 380px 0 0 15px;
+        }
+        p.link a {
+          text-transform: uppercase;
+          text-decoration: none;
+          display: inline-block;
+          color: #000;
+          padding: 5px 10px;
+          margin: 0 5px;
+          background-color: #ccc;
+          -moz-transition: all 0.2s ease-in;
+          -o-transition: all 0.2s ease-in;
+          -webkit-transition: all 0.2s ease-in;
+          transition: all 0.2s ease-in;
+        }
+        p.link a:hover {
+          color: #fff;
+          background-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <ul class="tabs" role="tablist">
+    {% for caption, step in steps %}
+        <li>
+            <input type="radio"
+                   name="tabs"
+                   id="{{ 'tab{}'.format(loop.index) }}"
+                   {{ 'checked' if loop.index == 1 else '' }} />
+            <label for="{{ 'tab{}'.format(loop.index) }}"
+                   role="tab"
+                   aria-selected="{{ 'true' if loop.index == 1 else 'false' }}"
+                   aria-controls="{{ 'panel{}'.format(loop.index) }}"
+                   tabindex="0">{{ caption }}</label>
+            <div id="tab-content{{ loop.index }}"
+                 class="tab-content"
+                 role="tabpanel"
+                 aria-labelledby="{{ caption.lower() }}"
+                 aria-hidden="{{ 'true' if loop.index > 1 else 'false' }}">
+                 {{ step }}</div>
+        </li>
+    {% endfor %}
+    </ul>
+</body>

@@ -1,0 +1,18 @@
+{
+	"telegram": {
+		"token": "",
+		"chat_id": 0,
+		"aliases": {},
+		"lang": "en"
+	},
+	"sheets": {
+		"scopes": ["https://www.googleapis.com/auth/spreadsheets"],
+		"spreadsheet_id": "",
+		"recurring_data": [],
+		"date_format": "%d.%m.%Y",
+		"table_name_format": "%B %Y",
+		"undo_timer": 30,
+		"create_summary_at": "22:00",
+		"lang": "en"
+	}
+}
