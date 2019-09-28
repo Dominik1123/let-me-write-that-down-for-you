@@ -13,7 +13,8 @@ class Handler:
                   '```\n/new <Liste von Namen> <Betrag> <Beschreibung>\n```\n'
                   'Die Namen können mittels Leerzeichen oder "," und "+" separiert sein, der Betrag kann einen '
                   'Dezimalpunkt oder -komma beinhalten. Falls die Beschreibung ein Datum im Format TT.MM.YYYY enthält, '
-                  'verwende ich dieses, ansonsten das aktuelle Datum.\n'
+                  'verwende ich dieses, ansonsten das aktuelle Datum. Falls der Betrag negativ ist, vertausche ich '
+                  'Sender und Empfänger.\n'
                   'Mit "/undo" kannst Du den letzten Eintrag wieder löschen und mit "/summary" schicke ich eine '
                   'Zusammenfassung aller Auslagen des aktuellen Zeitraums.',
             'en': 'Hi {}! You can add new records by telling me "/new". The format is as follows:\n'
@@ -21,7 +22,7 @@ class Handler:
                   'The names can be separated by just whitespace or by either "," or "+". The amount may contain a '
                   'decimal separator in form of a decimal comma or a decimal point. If the description contains a date '
                   'in the format DD.MM.YYYY then it will be used as the record\'s date, otherwise I\'ll use the '
-                  'current date.\n'
+                  'current date. If the amount is negative I\'ll exchange writer and recipient.\n'
                   'With "/undo" you can delete the most recently added record and by telling me "/summary" I\'ll send '
                   'a summary of all expenses of the current period.',
         },
@@ -36,6 +37,10 @@ class Handler:
         '/new: unknown_format': {
             'de': 'Das habe ich nicht verstanden',
             'en': 'Illegal format'
+        },
+        '/new: negative_amount_can_refer_to_only_one_debtor': {
+            'de': 'Ein negativer Betrag kann nur auf eine einzelne Person bezogen werden',
+            'en': 'A negative amount must refer to a single person',
         },
         '/new: success': {
             'de': 'Alles klar, ich habe den folgenden Eintrag angelegt:\n\n{}\n'
@@ -82,12 +87,12 @@ class Handler:
     def _handle_new(self, msg):
         from_name = msg['from']['first_name'].lower()
         donor = self.config['aliases'].get(from_name, from_name).capitalize()
-        match = re.match(r'^ *((?:[a-z]+ *[,+&]? *)*[a-z]+) *([0-9]+(?:[.,][0-9]+)?) *(.+)?',
+        match = re.match(r'^ *((?:[a-z]+ *[,+&]? *)*[a-z]+) *(-?[0-9]+(?:[.,][0-9]+)?) *(.+)?',
                          msg['text'][5:], flags=re.I)
         if match is None:
             self._reply(self.replies['/new: unknown_format'])
         else:
-            debtors = ' + '.join(x.capitalize() for x in re.findall(r'[a-z]+', match.group(1), flags=re.I))
+            debtors = [x.capitalize() for x in re.findall(r'[a-z]+', match.group(1), flags=re.I)]
             amount = match.group(2)
             description = match.group(3)
             date = re.findall(r'\d{2}\.\d{2}\.\d{4}', description or '')
@@ -96,7 +101,13 @@ class Handler:
                 date = datetime.strptime(date[0], '%d.%m.%Y')
             else:
                 date = datetime.now()
-            record = self.sheet.append([date, description, donor, debtors, amount])
+            if amount.startswith('-'):
+                if len(debtors) > 1:
+                    self._reply(self.replies['/new: negative_amount_can_refer_to_only_one_debtor'])
+                    return
+                donor, debtors = debtors[0], [donor]
+                amount = amount.lstrip('-')
+            record = self.sheet.append([date, description, donor, ' + '.join(debtors), amount])
             self._reply(self.replies['/new: success'].format(self._format_record(record)))
 
     def _handle_undo(self, __):

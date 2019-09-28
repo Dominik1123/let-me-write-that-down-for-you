@@ -43,7 +43,8 @@ new records using the following format:
 where `<for_whom>` is a list of names (separated by `,` `+` or just whitespace) and `what` is an optional description.
 If `what` contains a date of the form `DD.MM.YYYY` it will be taken as the date of the record, otherwise the current date is
 used. The first name of the sender is used as `who_paid`. In order to use another name for specific persons, just fill in
-`config.json -> "telegram.aliases"` which is a mapping of the form `first_name: alias`.
+`config.json -> "telegram.aliases"` which is a mapping of the form `first_name: alias`. If `how_much` is a negative number then
+`for_whom` and `who_paid` are exchanged (this works only with a single person, since it is used in place of `who_paid`).
 
 With `/undo` you can delete the most recently added record from the table. Previous records can't be deleted that way, 
 `/undo` is only valid if it follows `/new` (not another `/undo`).
