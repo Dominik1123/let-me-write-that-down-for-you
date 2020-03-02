@@ -129,7 +129,7 @@ class Sheets:
             spreadsheetId=self.spreadsheet_id, range=f'{old_table}!A1:E1').execute()['values'][0]
         self.sheet.batchUpdate(spreadsheetId=self.spreadsheet_id,
                                body={'requests': [{'addSheet': {'properties': {'title': new_table}}}]}).execute()
-        clearing = self.summary()[0][-1][1]
+        clearing = self._summary(old_table)[0][-1][1]
         values = [columns] + [
             [date, self.carry_over_str.format(old_table)] + list(i)[::-1] + c.tolist() for i, c in clearing.iterrows()]
         values += [[date] + data for data in self.config['recurring_data']]
