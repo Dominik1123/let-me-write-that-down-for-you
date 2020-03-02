@@ -99,9 +99,20 @@ class Sheets:
         tomorrow = today + timedelta(days=1)
         old_table = today.strftime(self.config['table_name_format'])
         new_table = tomorrow.strftime(self.config['table_name_format'])
+        date = tomorrow.strftime(self.config['date_format'])
+        self._new_accounting_period(old_table, new_table, date)
+
+    def new_accounting_period_from_previous_month(self):
+        today = datetime.today()
+        previous = today - timedelta(days=today.day)
+        date = (previous + timedelta(days=1)).strftime(self.config['date_format'])
+        old_table = today.strftime(self.config['table_name_format'])
+        new_table = previous.strftime(self.config['table_name_format'])
+        self._new_accounting_period(old_table, new_table, date)
+
+    def _new_accounting_period(self, old_table, new_table, date):
         if old_table == new_table:
             raise RuntimeError('Today is not the last day of the accounting period')
-        date = tomorrow.strftime(self.config['date_format'])
         self.sheet.batchUpdate(spreadsheetId=self.spreadsheet_id,
                                body={'requests': [{'addSheet': {'properties': {'title': new_table}}}]}).execute()
         clearing = self.summary()[0][-1][1]
@@ -113,13 +124,21 @@ class Sheets:
             spreadsheetId=self.spreadsheet_id,
             range=range_, body=dict(range=range_, values=values), valueInputOption='USER_ENTERED'
         ).execute()
-        print(result)
+        logging.info(result)
 
     def summary(self):
+        return self._summary(self.current_table_name)
+
+    def summary_previous_month(self):
+        today = datetime.today()
+        previous = today - timedelta(days=today.day)
+        return self._summary(previous.strftime(self.config['table_name_format']))
+
+    def _summary(self, table_name):
         values = self.sheet.values().get(
-            spreadsheetId=self.spreadsheet_id, range=self.current_table_name).execute()['values']
+            spreadsheetId=self.spreadsheet_id, range=table_name).execute()['values']
         df = pd.DataFrame(data=values[1:], columns=values[0], index=range(len(values)-1), dtype=str)
-        return summary(df, self.current_table_name)
+        return summary(df, table_name)
 
     def _history_append(self, item):
         with self.lock:

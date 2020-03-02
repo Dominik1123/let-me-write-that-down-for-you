@@ -57,6 +57,9 @@ Optionally any records stored in `config.json -> "sheets.recurring_data"` will b
 These recurring data should be lists of the form `[what, who_paid, for_whom, how_much]`.
 To compensate the carryover people should add a corresponding compensation record via `/new`.
 
+If for some reason the new accounting period is not created automatically this can be requested manually via `/newperiod`.
+This works starting from the first day of the month since it considers the current date to determine the period's table name.
+
 ### Accounting periods
 
 An accounting period is determined by its name via `config.json -> "sheets.table_name_format"`. This format string is applied to

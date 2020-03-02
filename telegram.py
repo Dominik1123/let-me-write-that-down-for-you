@@ -4,6 +4,7 @@ import re
 import traceback
 
 import telepot
+from urllib3.expcetions import ProtocolError
 
 
 class Handler:
@@ -121,6 +122,10 @@ class Handler:
     def _handle_summary(self, __):
         self.send_summary(self.sheet.summary())
 
+    def _handle_newperiod(self, __):
+        self.sheet.new_accounting_period_from_previous_month()
+        self.send_summary(self.sheet.summary_previous_month())
+
     def send_summary(self, summary):
         self.bot.sendDocument(self.chat_id,
                               (self.sheet.current_table_name.lower().replace(' ', '_') + '.html', summary[1]),
@@ -134,6 +139,13 @@ class Handler:
 
     def _reply(self, msg_text):
         self.bot.sendMessage(self.chat_id, msg_text, parse_mode='markdown')
+
+    def _send(self, func, *args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except ProtocolError:
+            self.bot = telepot.Bot(self.bot.token)
+            self._send(func, *args, **kwargs)
 
     def _format_record(self, record):
         backticks = '```'
