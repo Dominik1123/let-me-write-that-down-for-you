@@ -7,6 +7,7 @@ from threading import Lock, Thread, Timer
 import time
 
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import pandas as pd
@@ -57,11 +58,22 @@ class Sheets:
 
         self.service = build('sheets', 'v4', credentials=creds)
         self.sheet = self.service.spreadsheets()
-        self.columns = self.sheet.values().get(
-            spreadsheetId=self.spreadsheet_id, range=f'{self.current_table_name}!A1:E1').execute()['values'][0]
+        self._columns = None
 
         self.new_ap_supervisor = NewAPSupervisor(self, config, callbacks=new_ap_callbacks)
         self.new_ap_supervisor.start()
+
+    @property
+    def columns(self):
+        if self._columns is None:
+            try:
+                self._columns = self.sheet.values().get(
+                    spreadsheetId=self.spreadsheet_id,
+                    range=f'{self.current_table_name}!A1:E1'
+                ).execute()['values'][0]
+            except HttpError as err:
+                logging.error('Cannot fetch table for current accounting period: {}'.format(err))
+        return self._columns
 
     @property
     def current_table_name(self):
@@ -106,17 +118,19 @@ class Sheets:
         today = datetime.today()
         previous = today - timedelta(days=today.day)
         date = (previous + timedelta(days=1)).strftime(self.config['date_format'])
-        old_table = today.strftime(self.config['table_name_format'])
-        new_table = previous.strftime(self.config['table_name_format'])
+        old_table = previous.strftime(self.config['table_name_format'])
+        new_table = today.strftime(self.config['table_name_format'])
         self._new_accounting_period(old_table, new_table, date)
 
     def _new_accounting_period(self, old_table, new_table, date):
         if old_table == new_table:
             raise RuntimeError('Today is not the last day of the accounting period')
+        columns = self.sheet.values().get(
+            spreadsheetId=self.spreadsheet_id, range=f'{old_table}!A1:E1').execute()['values'][0]
         self.sheet.batchUpdate(spreadsheetId=self.spreadsheet_id,
                                body={'requests': [{'addSheet': {'properties': {'title': new_table}}}]}).execute()
         clearing = self.summary()[0][-1][1]
-        values = [self.columns] + [
+        values = [columns] + [
             [date, self.carry_over_str.format(old_table)] + list(i)[::-1] + c.tolist() for i, c in clearing.iterrows()]
         values += [[date] + data for data in self.config['recurring_data']]
         range_ = f'{new_table}!A1:E{len(values)}'

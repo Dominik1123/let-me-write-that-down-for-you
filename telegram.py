@@ -35,6 +35,10 @@ class Handler:
             'de': 'Ups, da ging etwas schief:\n{}',
             'en': 'Oops, something went wrong:\n{}'
         },
+        'no_table': {
+            'de': 'Die Tabelle für den aktuellen Zeitraum ist nicht verfügbar; evtl. muss diese erst mittels "/newperiod" angelegt werden.',
+            'en': 'The table for the current period is not available; creating it via "/newperiod" could be the solution.'
+        },
         '/new: unknown_format': {
             'de': 'Das habe ich nicht verstanden',
             'en': 'Illegal format'
@@ -65,6 +69,8 @@ class Handler:
         self.replies = {k: v[config['lang']] for k, v in self.replies.items()}
         self.config = config
         self.sheet.new_ap_supervisor.register_callback(self.send_summary)
+        if self.sheet.columns is None:
+            self._reply(self.replies['no_table'])
 
     def handle(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
