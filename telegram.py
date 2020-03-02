@@ -4,7 +4,7 @@ import re
 import traceback
 
 import telepot
-from urllib3.expcetions import ProtocolError
+from urllib3.exceptions import ProtocolError
 
 
 class Handler:
