@@ -133,9 +133,9 @@ class Handler:
         self.send_summary(self.sheet.summary_previous_month())
 
     def send_summary(self, summary):
-        self.bot.sendDocument(self.chat_id,
-                              (self.sheet.current_table_name.lower().replace(' ', '_') + '.html', summary[1]),
-                              caption=self.replies['/summary: caption'].format(self.sheet.current_table_name))
+        self._send('Document', self.chat_id,
+                               (self.sheet.current_table_name.lower().replace(' ', '_') + '.html', summary[1]),
+                               caption=self.replies['/summary: caption'].format(self.sheet.current_table_name))
 
     def _handle_help(self, msg):
         self._reply(self.replies['help'].format(msg['from']['first_name']))
@@ -144,11 +144,11 @@ class Handler:
         self._reply('Hi \N{Waving Hand Sign}')
 
     def _reply(self, msg_text):
-        self.bot.sendMessage(self.chat_id, msg_text, parse_mode='markdown')
+        self._send('Message', self.chat_id, msg_text, parse_mode='markdown')
 
     def _send(self, func, *args, **kwargs):
         try:
-            func(*args, **kwargs)
+            getattr(self.bot, 'send{}'.format(func.capitalize()))(*args, **kwargs)
         except ProtocolError:
             self.bot = telepot.Bot(self.bot.token)
             self._send(func, *args, **kwargs)
