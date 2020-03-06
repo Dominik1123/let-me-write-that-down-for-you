@@ -150,7 +150,7 @@ class Handler:
         try:
             getattr(self.bot, 'send{}'.format(func.capitalize()))(*args, **kwargs)
         except ProtocolError:
-            self.bot = telepot.Bot(self.bot.token)
+            self.bot = telepot.Bot(self.bot._token)
             self._send(func, *args, **kwargs)
 
     def _format_record(self, record):
