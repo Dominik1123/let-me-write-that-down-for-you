@@ -135,7 +135,8 @@ class Handler:
     def send_summary(self, summary):
         self._send('Document', self.chat_id,
                                (self.sheet.current_table_name.lower().replace(' ', '_') + '.html', summary[1]),
-                               caption=self.replies['/summary: caption'].format(self.sheet.current_table_name))
+                               caption=self.replies['/summary: caption'].format(self.sheet.current_table_name),
+                               prepare_retry=lambda: summary[1].seek(0))
 
     def _handle_help(self, msg):
         self._reply(self.replies['help'].format(msg['from']['first_name']))
@@ -146,12 +147,14 @@ class Handler:
     def _reply(self, msg_text):
         self._send('Message', self.chat_id, msg_text, parse_mode='markdown')
 
-    def _send(self, func, *args, **kwargs):
+    def _send(self, func, *args, prepare_retry=None, **kwargs):
         try:
             getattr(self.bot, 'send{}'.format(func.capitalize()))(*args, **kwargs)
         except ProtocolError:
             self.bot = telepot.Bot(self.bot._token)
-            self._send(func, *args, **kwargs)
+            if prepare_retry is not None:
+                prepare_retry()
+            self._send(func, *args, prepare_retry=prepare_retry, **kwargs)
 
     def _format_record(self, record):
         backticks = '```'
