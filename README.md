@@ -81,7 +81,7 @@ The following is an explanation of the configuration file:
             },
             "lang": "en",  # language code for bot messages to the group
             "default_for_whom": {  # allows to leave out for_whom in messages; values are taken from this dict intead
-                < Telegram first name (lowercase) > : < for_whom string which will be used for messages from that person >
+                < Telegram first name (lowercase) > : [< names of persons >]
             }
         },
         "sheets": {
