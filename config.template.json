@@ -3,7 +3,8 @@
 		"token": "",
 		"chat_id": 0,
 		"aliases": {},
-		"lang": "en"
+		"lang": "en",
+		"default_for_whom": {}
 	},
 	"sheets": {
 		"scopes": ["https://www.googleapis.com/auth/spreadsheets"],

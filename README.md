@@ -45,6 +45,7 @@ If `what` contains a date of the form `DD.MM.YYYY` it will be taken as the date 
 used. The first name of the sender is used as `who_paid`. In order to use another name for specific persons, just fill in
 `config.json -> "telegram.aliases"` which is a mapping of the form `first_name: alias`. If `how_much` is a negative number then
 `for_whom` and `who_paid` are exchanged (this works only with a single person, since it is used in place of `who_paid`).
+If `config.json -> "telegram.default_for_whom"` is filled in, then `for_whom` can be omitted and it will be filled with the value from the configuration (see below for details).
 
 With `/undo` you can delete the most recently added record from the table. Previous records can't be deleted that way, 
 `/undo` is only valid if it follows `/new` (not another `/undo`).
@@ -76,9 +77,12 @@ The following is an explanation of the configuration file:
             "token": "< the token of the Telegram bot >",
             "chat_id": < the group's chat id (should be a negative number) >,
             "aliases": {
-                < optional aliases mapping first names from Telegram to names that should be used in the sheet >
+                < optional aliases mapping first names from Telegram (lowercase) to names that should be used in the sheet >
             },
-            "lang": "en"  # language code for bot messages to the group
+            "lang": "en",  # language code for bot messages to the group
+            "default_for_whom": {  # allows to leave out for_whom in messages; values are taken from this dict intead
+                < Telegram first name (lowercase) > : < for_whom string which will be used for messages from that person >
+            }
         },
         "sheets": {
             "scopes": ["https://www.googleapis.com/auth/spreadsheets"],

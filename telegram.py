@@ -43,6 +43,10 @@ class Handler:
             'de': 'Das habe ich nicht verstanden',
             'en': 'Illegal format'
         },
+        '/new: missing_for_whom': {
+            'de': 'Bitte gib an, für wen diese Zahlung gemacht wurde (/new <für wen?> <wie viel?> <was?>)',
+            'en': 'Please indicate for whom you made the payment (/new <for whom?> <how much?> <what?>)',
+        },
         '/new: negative_amount_can_refer_to_only_one_debtor': {
             'de': 'Ein negativer Betrag kann nur auf eine einzelne Person bezogen werden',
             'en': 'A negative amount must refer to a single person',
@@ -94,12 +98,19 @@ class Handler:
     def _handle_new(self, msg):
         from_name = msg['from']['first_name'].lower()
         donor = self.config['aliases'].get(from_name, from_name).capitalize()
-        match = re.match(r'^ *((?:[a-z]+ *[,+&]? *)*[a-z]+) *(-?[0-9]+(?:[.,][0-9]+)?) *(.+)?',
+        match = re.match(r'^ *((?:[a-z]+ *[,+&]? *)*[a-z]+)? *(-?[0-9]+(?:[.,][0-9]+)?) *(.+)?',
                          msg['text'][5:], flags=re.I)
         if match is None:
             self._reply(self.replies['/new: unknown_format'])
         else:
-            debtors = [x.capitalize() for x in re.findall(r'[a-z]+', match.group(1), flags=re.I)]
+            if match.group(1) is not None:
+                debtors = [x.capitalize() for x in re.findall(r'[a-z]+', match.group(1), flags=re.I)]
+            else:
+                try:
+                    debtors = self.config['default_for_whom'][from_name]
+                except KeyError:
+                    self._reply(self.replies['/new: missing_for_whom'])
+                    return
             amount = match.group(2)
             description = match.group(3)
             date = re.findall(r'\d{2}\.\d{2}\.\d{4}', description or '')
